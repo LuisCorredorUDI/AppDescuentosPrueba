@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_multi_formatter/flutter_multi_formatter.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
+import 'package:intl/intl.dart';
 
 class DescuentosPage extends StatefulWidget {
   const DescuentosPage({super.key, required this.title});
@@ -15,6 +18,10 @@ class _MyHomePageState extends State<DescuentosPage> {
   //variable global para el resultado
   String descuentoDetalle = '-';
   int descuentoDetalleValor = 0;
+  var formatoDescuento =
+      MaskTextInputFormatter(mask: '##', filter: {"#": RegExp(r'[0-9]')});
+  final formatoPrecioDescuento =
+      NumberFormat.currency(locale: 'es_MX', symbol: "\$");
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +34,7 @@ class _MyHomePageState extends State<DescuentosPage> {
         padding: EdgeInsets.all(30),
         child: Column(
           children: <Widget>[
-            //Aqui a el resultado
+            //Aqui va el resultado
             Container(
               padding: EdgeInsets.all(10),
               alignment: Alignment.center,
@@ -43,7 +50,7 @@ class _MyHomePageState extends State<DescuentosPage> {
               alignment: Alignment.center,
               child: Center(
                 child: Text(
-                  '\$' + descuentoDetalleValor.toString(),
+                  formatoPrecioDescuento.format(descuentoDetalleValor),
                   style: TextStyle(color: Colors.red[600], fontSize: 22),
                 ),
               ),
@@ -52,6 +59,10 @@ class _MyHomePageState extends State<DescuentosPage> {
               'Ingrese el costo original del producto:',
             ),
             TextField(
+              inputFormatters: [
+                CurrencyInputFormatter(
+                    leadingSymbol: CurrencySymbols.DOLLAR_SIGN)
+              ],
               //se asigan el controlador
               controller: textoCajaValor,
               //acepta numeros solamente
@@ -63,6 +74,7 @@ class _MyHomePageState extends State<DescuentosPage> {
               'Ingrese el descuento a calcular:',
             ),
             TextField(
+              inputFormatters: [formatoDescuento],
               controller: textoCajaDescuento,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(border: OutlineInputBorder()),
@@ -73,11 +85,23 @@ class _MyHomePageState extends State<DescuentosPage> {
                   //variable local
                   double descuento = 0;
                   double valProducto = 0;
-                  if ((double.parse(textoCajaValor.text) != 0) &&
+                  String textoCajaValorSinFormato;
+
+                  //Se quitan simbolos
+                  textoCajaValorSinFormato = textoCajaValor.text
+                      .replaceAll('\$', '')
+                      .replaceAll(',', '')
+                      .replaceAll('.', '');
+                  // se quitan los 2 ultimos numeros innecesarios
+                  textoCajaValorSinFormato = textoCajaValorSinFormato.substring(
+                      0, textoCajaValorSinFormato.length - 2);
+
+                  if ((double.parse(textoCajaValorSinFormato) != 0) &&
                       (double.parse(textoCajaDescuento.text) != 0)) {
-                    descuento = double.parse(textoCajaValor.text) *
+                    descuento = double.parse(textoCajaValorSinFormato) *
                         (double.parse(textoCajaDescuento.text) / 100);
-                    valProducto = double.parse(textoCajaValor.text) - descuento;
+                    valProducto =
+                        double.parse(textoCajaValorSinFormato) - descuento;
                   }
 
                   descuentoDetalle = 'El valor del producto, aplicando el ' +
